@@ -1,0 +1,10 @@
+diff --git a/symlinked/vimrc b/symlinked/vimrc
+index d733eb..790c0f 100644
+--- a/symlinked/vimrc
++++ b/symlinked/vimrc
+@@ -822,3 +822,5 @@ set foldmethod=marker
+ 
+ " For xml, java, etc., add <:>
+ setlocal matchpairs=(:),{:},[:]
++
++noremap <leader>4 80i#O#}}} ENDOO80i#O80i#o# {{{ 

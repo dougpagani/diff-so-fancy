@@ -1,0 +1,7 @@
+diff --git a/frags/bp_git b/frags/bp_git
+index ad050c..65b426 100644
+--- a/frags/bp_git
++++ b/frags/bp_git
+@@ -401,3 +401,47 @@ alias gbds=git_branch_diff_split
++noremap <leader>4 80i#O#}}} ENDOO80i#O80i#o# {{{ 
+

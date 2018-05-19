@@ -1,0 +1,30 @@
+diff --git a/symlinked/vimrc b/symlinked/vimrc
+index ae38dc..cd11be 100644
+--- a/symlinked/vimrc
++++ b/symlinked/vimrc
+@@ -523,10 +523,10 @@ nnoremap <leader><S-h> :call ToggleHiddenAll()<CR>
+ " https://vi.stackexchange.com/questions/9455/why-should-i-use-augrou://vi.stackexchange.com/questions/9455/why-should-i-use-augroup
+ " TODO: reset JUST cursor, but dont have to do it by changing mode... or save mode
+ 
+-let @a="A'Ialias ='bi"
+-"let @f="0cwfunctionwws() {	f'xf'xo€kb}:"
+-nnoremap <leader>mf 0cwfunctionf=s() { <ESC>ls<CR><ESC>$xo}
+-"let @f='0cwfunctionf=s() { €kD$beld$o}'
++let @a="A'<Esc>Ialias ='<Esc>bi"
++"let @f="0cwfunction<Esc>wws() {	<Esc>f'xf'xo€kb}<Esc>:<Esc>"
++nnoremap <leader>mf 0cwfunction<Esc>f=s() { <ESC>ls<CR><ESC>$xo}<Esc>
++"let @f='0cwfunction<Esc>f=s() { €kD<Esc>$beld$o}<Esc>'
+ let @f='\mf'
+ 
+ " Set relative numbering
+@@ -824,8 +824,8 @@ set foldmethod=marker
+ setlocal matchpairs=(:),{:},[:]
+ 
+ " Easier variable-usage in BASH
+-nnoremap <leader>v a"${}"hi
+-"inoremap <leader>v "${}"hi " Really annoying delay
++nnoremap <leader>v a"${}"<Esc>hi
++"inoremap <leader>v "${}"<Esc>hi " Really annoying delay
+ 
+ " Edit just-pasted text
+ " (similar usage as gv, for last visual selection: reselect)

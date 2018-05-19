@@ -1,0 +1,24 @@
+diff --git a/symlinked/vimrc b/symlinked/vimrc
+index d733eb..ae3dc2 100644
+--- a/symlinked/vimrc
++++ b/symlinked/vimrc
+@@ -822,3 +822,19 @@ set foldmethod=marker
+ 
+ " For xml, java, etc., add <:>
+ setlocal matchpairs=(:),{:},[:]
++
++" Easier variable-usage in BASH
++nnoremap <leader>v a"${}"hi
++"inoremap <leader>v "${}"hi " Really annoying delay
++
++" Edit just-pasted text
++" (similar usage as gv, for last visual selection: reselect)
++" SOURCE: http://vim.wikia.com/wiki/Selecting_your_pasted_text
++nnoremap gp `[v`]
++
++" Folding shortcuts (can also v...zf, zfa{)
++" Major section
++"noremap <leader>4 80i#o#}}} END: O#{{{ -------- 
++noremap <leader>4 80i#O#}}} ENDOO80i#O80i#o# {{{ 
++" Minor section
++noremap <leader>5 i#}}} ENDO#{{{ 

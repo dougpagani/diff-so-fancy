@@ -1,0 +1,284 @@
+diff --git a/frags/bp_git b/frags/bp_git
+index ad050c..65b426 100644
+--- a/frags/bp_git
++++ b/frags/bp_git
+@@ -401,3 +401,47 @@ alias gbds=git_branch_diff_split
+ ################################################################################
+ ## END: git-FRAG
+ 
++git-find-in-log() {
++    git log --color --all -i  --grep="$1" | ack --smart-case --passthru --color "$1"
++}
++
++git_grep_stashes () 
++{ 
++    git grep "$@" $(git reflog show --format="%h" stash)
++}
++# e.g.
++# > git_grep_stashes -C3 "missing-piece"
++
++# Can add grep-options like: -C3 (to grab context lines)
++git-grep() {
++    git grep "$@" $(git rev-list HEAD~100)
++}
++
++
++# For grabbing a url to jump into another server and clone it easily
++function git_remote_copy_url() {
++    git remote get-url origin | tee >(pbcopy)
++    echo -e "${GREY}... Copied.${NC}" 1>&2
++}
++alias grcu=git_remote_copy_url
++
++alias grv='git remote -v'
++
++
++alias git_current_line_count_changed='gds | tr -s '\'' '\'' | cut -f4 -d'\'' '\'' | sed '\''$d'\'' | paste -s -d+ - | bc'
++
++git_merge_commits() { 
++    git rev-list --min-parents=2 ${1:-HEAD}
++}
++
++# navigating
++alias gitdir='cls $(git rev-parse --show-toplevel)/.git'
++alias gitroot='cls $(git rev-parse --show-toplevel)'
++
++# A good survey of a directory; in particular, a git-repo
++alias du_toplvl='\du -hd1 | hl '\''\d[\d\.]*M'\'''
++
++# In a large unruly directory (e.g. MIDAS), get a report of contained repos
++alias find_repos='find . -name .git -type d -prune | parallel '\''printf "%s:    " $(basename $(dirname {})); dirname $(dirname {})'\'' | { echo REPO LOCATION; cat; } | column  -t'
++alias find-repos='find . -name .git -type d -prune | parallel '\''printf "%s:    " $(basename $(dirname {})); dirname $(dirname {})'\'' | { echo REPO LOCATION; cat; } | tee >(column  -t >/dev/tty) | { sleep 1; printf -- '\''----------\nREPOS: '\''; wc -l; }'
++# TODO: eliminate asynch weirdness
+diff --git a/frags/bp_scratch b/frags/bp_scratch
+index 9b9154..891c50 100644
+--- a/frags/bp_scratch
++++ b/frags/bp_scratch
+@@ -25,7 +25,119 @@ synch_scratch() {
+ # }}}
+ ################################################################################
+ 
++################################################################################
++# END: FRAG: Scratch
++
+ 
+ ################################################################################
++#{{{ DEBUG helpers
+ ################################################################################
+-# END: FRAG: Scratch
++
++# sv: like pv (pipe-view), only see the intermediate data, not just pipe-progress
++# Relevant for print-command
++alias stream_view='tee /dev/tty'
++alias sv=stream_view
++
++alias bashtoolbox='vim ~/dotfiles/utils/bashbox.script'
++
++# copy pid
++alias cpid='echo "$$" | pbc'
++
++# Color STDERR red, to distinguish from stdout
++alias stderr_red_stream='set +o noclobber; 2> >(while read line; do echo -e "\e[01;31m$line\e[0m" >&2; done)'
++    alias srs=stderr_red_stream
++# > srs echo color me d00d >&2 
++
++# Sandbox for sanity-checks, or test-out cases in documentation
++alias cdtemp='cd $(mktemp -d)'
++# Quick test of a script-context
++alias bashit='cdtemp; touch script.sh; chmod +x script.sh; tmux split-window -v -d '\''vim script.sh'\'''
++
++#{{{ Script development
++
++alias senv_names='env | sort | sed '\''s/=.*//'\'' | nl'
++
++#alias printenv='env | sed '\''s/=\(.*\)$/='\''"'\''"'\''\1'\''"'\''"'\''/'\'''
++#alias printenv='export -p'
++alias printenv='export -p | sed -n '\''/declare -x/p'\'' | sed '\''s/declare -x //'\'''
++
++# Make the process "think" it isnt being run at a terminal (must turn-off noclobber)
++# usage: > masktty CMD
++alias masktty='</dev/null > >(cat) 2> >(cat) '
++alias masktty='set +o noclobber; </dev/null > >(cat) 2> >(cat) '
++
++# Debug ssh-invocations, docker, and similars
++print_interactive_info() {
++    echo ${BASH_SOURCE[@]}
++    echo ${FUNCNAME[@]}
++    echo "$0" 
++    echo "$-" | \grep --color 'i'
++    [[ $- =~ i ]] && echo "[-i] is set" || "[-i] is unset"
++    [ -z "$PS1" ] && echo
++    [ -t 0 ] && echo "stdin IS tty" || echo "stdin NOT tty"
++    [ -t 1 ] && echo "stdout IS tty" || echo "stdout NOT tty"
++    [ -t 2 ] && echo "stderr IS tty" || echo "stderr NOT tty"
++    [ -p /dev/stdin ] && echo "stdin is named, so interactive" \
++        || echo 'stdin is not a named-pipe; non-interactive'
++
++
++    case "$-" in
++    *i*)	echo This shell is interactive ;;
++    *)	echo This shell is not interactive ;;
++    esac
++}
++
++# Cause an error, to test 'trap - ERR', set -eE, and the like
++alias errtest='bash -s <<< '\''exit 3'\'''
++
++# Template for a "debug" hook
++dhook () 
++{ 
++    echo ">>>>>> DEBUG hook START"
++    :
++    echo "<<<<<< END hook for DEBUG"
++}
++
++dhook () 
++{ 
++    echo ">>>>>> DEBUG hook START";
++    error_cache="${BASH_SOURCE}[${BASH_LINENO[@]}]: ${BASH_COMMAND}";
++    echo "$error_cache";
++    echo "<<<<<< END hook for DEBUG"
++}
++
++printargs() {
++    printf '%s\n' "$@"
++}
++printarray=printargs
++
++#}}}
++
++#{{{ Interactive/prompt -bash
++
++# Create a process-watcher, like filebrowsersplit
++alias displayx_fildes='tmux split-window -v -d display.sh --cut --bail-on-exit lsof -p $$'
++    alias displayx_cwp=displayx_fildes
++
++alias tmux-editenv='tmux split-window -v -d display.sh --cut --bail-on-exit tmux show-environment; echo "USE: tmux-setnv , tmux-unset"'
++
++# For development of ~/dotfiles/frags
++alias bpcacheoff='tmux set-environment TO_USE_BP_CACHE 0; tmux set-environment TO_WRITE_CACHE 0'
++alias bpcacheon='tmux set-environment -u TO_WRITE_CACHE; tmux set-environment -u TO_USE_BP_CACHE'
++alias bpcacheon='rm $BP_CACHE_PATH; tmux set-environment -u TO_WRITE_CACHE; tmux set-environment -u TO_USE_BP_CACHE'
++alias bpcacheref='rm "$BP_CACHE_PATH"'
++#}}}
++
++# A time command
++alias timeron='. /Users/dougpa/bin/bash_command_timer.sh'
++# Testing SIGPIPE for bash
++trap 'echo ">>>>>>>>>>>" SIGPIPE ERROR' SIGPIPE 
++
++# }}} END
++################################################################################
++################################################################################
++################################################################################
++
++# streamview
++alias sv='tee >(while read line; do echo -e "\e[01;31m$line\e[0m" >/dev/tty; done)'
++
+diff --git a/symlinked/gitconfig b/symlinked/gitconfig
+index 17b691..445f94 100644
+--- a/symlinked/gitconfig
++++ b/symlinked/gitconfig
+@@ -143,6 +143,34 @@
+     co = "!git checkout"
+     cob = "!git checkout -b"
+ 
++    codate = "!f() { git checkout $(git rev-list -n1 --before=\"$1\" ${2-master}); }; f"
++    # e.g. git codate "Mar 25 2015", "yesterday", "3 days ago"
++    # In considering this:
++    # https://www.endpoint.com/blog/2014/05/19/git-checkout-at-specific-date
++
++    # Rebasing
++    rb = rebase --interactive
++    rebi = rebase --interactive
++    reba = rebase --abort
++    rebc = rebase --continue
++    rebs = rebase --skip
++
++    rebundo = reset --hard @{1}
++    undorebase = reset --hard @{1}
++    rebaseundo = reset --hard @{1}
++
++    ours = checkout --ours -- .
++    theirs = checkout --theirs -- .
++    mergerestore = checkout --merge -- .
++
++
++    cp = cherry-pick
++    cpa = cherry-pick --abort 
++    cpc = cherry-pick --continue
++
++    # "reset" is so terribly named
++    movetipto = reset --hard
++
+     # AMENDING:
+     amend = "!git commit --amend"
+     # But skip the comment
+@@ -399,10 +427,11 @@
+     allstrangers = !git clean -ndx
+ 
+     # has the date, different-heads distinguished by color, 
+-    graph2 = log --pretty=format:'%Cgreen%ad%Creset %C(yellow)%h%Creset%C(auto)%d%Creset %s %C(cyan)[%an]%Creset %Cgreen(%ar)%Creset' --date=short --graph
+     graph1 = log --pretty=format:'%Cgreen%ad%Creset %C(yellow)%h%Creset%C(yellow)%d%Creset %s %C(cyan)[%an]%Creset %Cgreen(%ar)%Creset' --date=short --graph
++    graph2 = log --pretty=format:'%Cgreen%ad%Creset %C(yellow)%h%Creset%C(auto)%d%Creset %s %C(cyan)[%an]%Creset %Cgreen(%ar)%Creset' --date=short --graph
+     # has just hours, not author
+-    graph = log --pretty=format:'%Cgreen(%ar)%Creset %C(yellow)%h%Creset%C(auto)%d%Creset %s %C(cyan)[%an]%Creset ' --date=short --graph
++    graph3 = log --pretty=format:'%Cgreen(%ar)%Creset %C(yellow)%h%Creset%C(auto)%d%Creset %s %C(cyan)[%an]%Creset ' --date=short --graph
++    graph = log --oneline --graph --decorate --all
+ 
+     # USAGE: typically post-pull, to see new commits
+     new = !sh -c 'git log $1@{1}..$1@{0} "$@"'
+@@ -421,6 +450,7 @@
+     dt = !git difftool -- $(git difftool --name-only | grep -Ev "*pdf")
+ 
+     diff2 = !tmux select-pane -P "bg=colour233,fg=colour144"; { git diff --color | less --tabs=4 -RFX }; tmux select-pane -P default
++    diffnopager = !git --no-pager diff 
+ 
+ # }}}
+ ################################################################################
+@@ -462,6 +492,10 @@
+         stashshowallfiles = "!git show-all-files-in-stash"
+         stashshow = "!git show-all-files-in-stash"
+ 
++    # View the log, with a stash-specific pattern seeded to the pager
++    stashcontext = "!git -c core.pager='less --pattern \"\\*-\\.\"' \
++        log --oneline --graph --decorate \
++        --all $(git reflog show --format=\"%h\" stash)"
+ 
+ ################################################################################
+ #}}} END: STASHES 
+@@ -542,6 +576,10 @@
+     # avoid diff-so-fancy, and get a patch-formatted diff
+     patch = !git --no-pager diff --no-color
+ 
++    find = "!bash -c 'git log --color --all -i --grep=\"$1\" | ack --smart-case --passthru --color \"$1\"' -"
++	quick-stats = ! /usr/local/bin/git-quick-stats
++    # works with trailing '-'
++
+ #}}} END
+ ################################################################################
+ #}}} END: ALIASES
+diff --git a/symlinked/vimrc b/symlinked/vimrc
+index d733eb..ae3dc2 100644
+--- a/symlinked/vimrc
++++ b/symlinked/vimrc
+@@ -822,3 +822,19 @@ set foldmethod=marker
+ 
+ " For xml, java, etc., add <:>
+ setlocal matchpairs=(:),{:},[:]
++
++" Easier variable-usage in BASH
++nnoremap <leader>v a"${}"hi
++"inoremap <leader>v "${}"hi " Really annoying delay
++
++" Edit just-pasted text
++" (similar usage as gv, for last visual selection: reselect)
++" SOURCE: http://vim.wikia.com/wiki/Selecting_your_pasted_text
++nnoremap gp `[v`]
++
++" Folding shortcuts (can also v...zf, zfa{)
++" Major section
++"noremap <leader>4 80i#o#}}} END: O#{{{ -------- 
++noremap <leader>4 80i#O#}}} ENDOO80i#O80i#o# {{{ 
++" Minor section
++noremap <leader>5 i#}}} ENDO#{{{ 
